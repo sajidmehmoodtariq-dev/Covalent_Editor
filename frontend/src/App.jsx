@@ -1,5 +1,6 @@
 import { useState } from "react"
 import CodeEditor from "./components/CodeEditor"
+import SnippetLibrary from "./components/SnippetLibrary"
 
 const App = () => {
   const [userName, setUserName] = useState(() => new URLSearchParams(window.location.search).get("username") || "")
@@ -56,15 +57,15 @@ const App = () => {
 
   return (
     <main className="w-full h-screen bg-gray-900 text-white flex p-4 gap-2">
-      {/* UPDATE: Added flex-col and relative positioning to the aside */}
+      
+      {/* LEFT SIDEBAR: Active Users */}
       <aside className="w-2/12 h-full bg-gray-800 p-4 rounded-lg flex flex-col gap-4">
         <div className="border-b border-gray-700 pb-2">
           <h2 className="text-xl font-bold text-blue-400">{roomName}</h2>
           <p className="text-sm text-gray-400">Active Users</p>
         </div>
         
-        {/* Added flex-grow and overflow-y-auto so a long list of users scrolls instead of pushing the button off screen */}
-        <ul className="flex flex-col gap-3 grow overflow-y-auto">
+        <ul className="flex flex-col gap-3 flex-grow overflow-y-auto">
           {connectedUsers.map((user, index) => (
             <li key={index} className="flex items-center gap-2 text-gray-200">
               <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
@@ -73,7 +74,6 @@ const App = () => {
           ))}
         </ul>
 
-        {/* NEW: The Switch Room Button locked to the bottom */}
         <button 
           onClick={handleSwitchRoom}
           className="w-full bg-gray-700 hover:bg-gray-600 text-sm font-semibold p-2 rounded-lg transition-colors mt-auto"
@@ -82,13 +82,20 @@ const App = () => {
         </button>
       </aside>
       
-      <section className="w-10/12 h-full bg-gray-700 rounded-lg">
+      {/* CENTER: The Monaco Editor (Adjusted width to 8/12) */}
+      <section className="w-8/12 h-full bg-gray-700 rounded-lg flex flex-col">
         <CodeEditor 
           userName={userName} 
           roomName={roomName}
           onUsersChange={setConnectedUsers} 
         /> 
       </section>
+
+      {/* RIGHT SIDEBAR: Snippet Library (New 2/12 column) */}
+      <aside className="w-2/12 h-full">
+        <SnippetLibrary />
+      </aside>
+
     </main>
   )
 }
