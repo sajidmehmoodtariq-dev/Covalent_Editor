@@ -21,7 +21,8 @@ const SnippetLibrary = () => {
     if (!title.trim() || !code.trim()) return;
 
     const newSnippet = {
-      id: crypto.randomUUID(),
+      // Generates a unique string using the current timestamp and a random number
+      id: Date.now().toString(36) + Math.random().toString(36).substring(2),
       title,
       code,
     };
@@ -45,7 +46,7 @@ const SnippetLibrary = () => {
     <div className="flex flex-col h-full bg-gray-800 p-4 rounded-lg gap-4">
       <div className="flex justify-between items-center border-b border-gray-700 pb-2">
         <h2 className="text-xl font-bold text-blue-400">My Snippets</h2>
-        <button 
+        <button
           onClick={() => setIsAdding(!isAdding)}
           className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1 px-2 rounded transition-colors"
         >
@@ -76,7 +77,7 @@ const SnippetLibrary = () => {
         </form>
       )}
 
-      <ul className="flex flex-col gap-3 flex-grow overflow-y-auto pr-1">
+      <ul className="flex flex-col gap-3 grow overflow-y-auto pr-1">
         {snippets.length === 0 && !isAdding && (
           <p className="text-sm text-gray-500 text-center mt-4">No snippets saved yet.</p>
         )}
@@ -85,14 +86,14 @@ const SnippetLibrary = () => {
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-200 text-sm">{snippet.title}</span>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
+                <button
                   onClick={() => copyToClipboard(snippet.code)}
                   className="text-gray-400 hover:text-blue-400 text-xs transition-colors"
                   title="Copy to clipboard"
                 >
                   Copy
                 </button>
-                <button 
+                <button
                   onClick={() => deleteSnippet(snippet.id)}
                   className="text-gray-400 hover:text-red-400 text-xs transition-colors"
                   title="Delete snippet"
