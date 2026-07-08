@@ -1,20 +1,22 @@
-# Use a lightweight Node Alpine image
-FROM node:20-alpine
+# Build the frontend [ dist folder]
+FROM node:20-alpine as frontend-builder
 
-# 1. Create and set the working directory inside the container
+COPY ./frontend /app
+
 WORKDIR /app
 
-# 2. Copy ONLY the package files first to leverage Docker's layer caching
-COPY ./backend/package*.json ./
-
-# 3. Install dependencies natively inside the Alpine Linux container
 RUN npm install
 
-# 4. Copy the rest of your backend code (including the 'public' folder)
-COPY ./backend .
+RUN npm run build
 
-# 5. Document the port the container will use
-EXPOSE 3000
+FROM node:20-alpine 
 
-# 6. Start the server
+COPY ./backend /app
+
+WORKDIR /app
+
+RUN npm install
+
+COPY --from=frontend-builder /app/dist /app/public
+
 CMD ["node", "server.js"]
