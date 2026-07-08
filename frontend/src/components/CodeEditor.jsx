@@ -20,7 +20,7 @@ const CodeEditor = ({ userName, onUsersChange }) => {
     const model = editor.getModel();
     if (!model) return;
 
-    const provider = new SocketIOProvider('http://localhost:3000', 'monaco', ydoc, { autoConnect: true });
+    const provider = new SocketIOProvider('/', 'monaco', ydoc, { autoConnect: true });
     
     provider.awareness.setLocalStateField('user', { name: userName });
 
