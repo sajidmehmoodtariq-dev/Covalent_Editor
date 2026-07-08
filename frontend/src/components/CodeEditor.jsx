@@ -4,14 +4,18 @@ import { useState, useMemo, useEffect } from 'react';
 import * as Y from 'yjs';
 import { SocketIOProvider } from 'y-socket.io';
 
-// Accept the new roomName prop
+// Define the languages you want to support
+const SUPPORTED_LANGUAGES = ['javascript', 'python', 'cpp', 'typescript', 'html', 'css', 'json'];
+
 const CodeEditor = ({ userName, roomName, onUsersChange }) => {
   const [editor, setEditor] = useState(null);
+  const [language, setLanguage] = useState('javascript'); // Local UI state
 
   const ydoc = useMemo(() => new Y.Doc(), []);
-  
-  // You can keep 'monaco' here as the text node identifier within the document
   const ytext = useMemo(() => ydoc.getText('monaco'), [ydoc]);
+  
+  // NEW: A shared dictionary to store room configuration
+  const yconfig = useMemo(() => ydoc.getMap('config'), [ydoc]); 
 
   const handleEditorDidMount = (editorInstance) => {
     setEditor(editorInstance);
@@ -23,7 +27,6 @@ const CodeEditor = ({ userName, roomName, onUsersChange }) => {
     const model = editor.getModel();
     if (!model) return;
 
-    // INJECT THE DYNAMIC ROOM NAME HERE
     const provider = new SocketIOProvider(window.location.origin, roomName, ydoc, { autoConnect: true });
     
     provider.awareness.setLocalStateField('user', { name: userName });
@@ -45,6 +48,22 @@ const CodeEditor = ({ userName, roomName, onUsersChange }) => {
       }
     };
 
+    // NEW: Listen for language changes made by other users in the room
+    yconfig.observe(() => {
+      const syncedLanguage = yconfig.get('language');
+      if (syncedLanguage && syncedLanguage !== language) {
+        setLanguage(syncedLanguage);
+      }
+    });
+
+    // On initial connection, check if a language was already set by someone else
+    provider.on('sync', (isSynced) => {
+      if (isSynced) {
+        const existingLanguage = yconfig.get('language');
+        if (existingLanguage) setLanguage(existingLanguage);
+      }
+    });
+
     provider.awareness.on('change', updateUsersList);
     updateUsersList();
 
@@ -60,16 +79,47 @@ const CodeEditor = ({ userName, roomName, onUsersChange }) => {
       binding.destroy();
       provider.disconnect();
     };
-  }, [editor, userName, roomName, ydoc, ytext, onUsersChange]); // Add roomName to dependency array
+  }, [editor, userName,language, roomName, ydoc, ytext, yconfig, onUsersChange]); // Removed 'language' to prevent reconnect loops
+
+  // NEW: Handle when the local user changes the dropdown
+  const handleLanguageChange = (e) => {
+    const newLang = e.target.value;
+    setLanguage(newLang);          // Update local UI immediately
+    yconfig.set('language', newLang); // Broadcast the change to Yjs network
+  };
 
   return (
-    <Editor
-      height="100%"
-      defaultLanguage="python"
-      defaultValue='print("Hello world")'
-      theme="vs-dark"
-      onMount={handleEditorDidMount}
-    />
+    <div className="flex flex-col h-full w-full">
+      {/* Editor Toolbar */}
+      <div className="bg-gray-800 p-2 flex justify-end items-center border-b border-gray-700 rounded-t-lg">
+        <label className="text-sm text-gray-400 mr-3 font-semibold">Language:</label>
+        <select
+          value={language}
+          onChange={handleLanguageChange}
+          className="bg-gray-700 text-white text-sm rounded-md px-3 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <option key={lang} value={lang}>
+              {lang.toUpperCase()}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Monaco Container */}
+      <div className="grow">
+        <Editor
+          height="100%"
+          language={language}
+          theme="vs-dark"
+          onMount={handleEditorDidMount}
+          options={{
+            minimap: { enabled: false }, // Optional: hides the minimap for a cleaner look
+            padding: { top: 16 }
+          }}
+        />
+      </div>
+    </div>
   );
 };
 

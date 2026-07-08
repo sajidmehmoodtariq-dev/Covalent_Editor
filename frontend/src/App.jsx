@@ -64,7 +64,7 @@ const App = () => {
         </div>
         
         {/* Added flex-grow and overflow-y-auto so a long list of users scrolls instead of pushing the button off screen */}
-        <ul className="flex flex-col gap-3 flex-grow overflow-y-auto">
+        <ul className="flex flex-col gap-3 grow overflow-y-auto">
           {connectedUsers.map((user, index) => (
             <li key={index} className="flex items-center gap-2 text-gray-200">
               <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
